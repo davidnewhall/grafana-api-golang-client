@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,9 +16,14 @@ type RoleAssignments struct {
 }
 
 func (c *Client) GetRoleAssignments(uid string) (*RoleAssignments, error) {
+	return c.GetRoleAssignmentsContext(context.Background(), uid)
+}
+
+// GetRoleAssignmentsContext does the same thing as GetRoleAssignments(), but also takes in a context.
+func (c *Client) GetRoleAssignmentsContext(ctx context.Context, uid string) (*RoleAssignments, error) {
 	assignments := &RoleAssignments{}
 	url := fmt.Sprintf("/api/access-control/roles/%s/assignments", uid)
-	if err := c.request(http.MethodGet, url, nil, nil, assignments); err != nil {
+	if err := c.request(ctx, http.MethodGet, url, nil, nil, assignments); err != nil {
 		return nil, err
 	}
 
@@ -25,6 +31,11 @@ func (c *Client) GetRoleAssignments(uid string) (*RoleAssignments, error) {
 }
 
 func (c *Client) UpdateRoleAssignments(ra *RoleAssignments) (*RoleAssignments, error) {
+	return c.UpdateRoleAssignmentsContext(context.Background(), ra)
+}
+
+// UpdateRoleAssignmentsContext does the same thing as UpdateRoleAssignments(), but also takes in a context.
+func (c *Client) UpdateRoleAssignmentsContext(ctx context.Context, ra *RoleAssignments) (*RoleAssignments, error) {
 	response := &RoleAssignments{}
 
 	data, err := json.Marshal(ra)
@@ -33,7 +44,7 @@ func (c *Client) UpdateRoleAssignments(ra *RoleAssignments) (*RoleAssignments, e
 	}
 
 	url := fmt.Sprintf("/api/access-control/roles/%s/assignments", ra.RoleUID)
-	err = c.request(http.MethodPut, url, nil, bytes.NewBuffer(data), &response)
+	err = c.request(ctx, http.MethodPut, url, nil, bytes.NewBuffer(data), &response)
 	if err != nil {
 		return nil, err
 	}

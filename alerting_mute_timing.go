@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -42,8 +43,13 @@ type YearRange string
 
 // MuteTimings fetches all mute timings.
 func (c *Client) MuteTimings() ([]MuteTiming, error) {
+	return c.MuteTimingsContext(context.Background())
+}
+
+// MuteTimingsContext
+func (c *Client) MuteTimingsContext(ctx context.Context) ([]MuteTiming, error) {
 	mts := make([]MuteTiming, 0)
-	err := c.request("GET", "/api/v1/provisioning/mute-timings", nil, nil, &mts)
+	err := c.request(ctx, "GET", "/api/v1/provisioning/mute-timings", nil, nil, &mts)
 	if err != nil {
 		return nil, err
 	}
@@ -52,35 +58,55 @@ func (c *Client) MuteTimings() ([]MuteTiming, error) {
 
 // MuteTiming fetches a single mute timing, identified by its name.
 func (c *Client) MuteTiming(name string) (MuteTiming, error) {
+	return c.MuteTimingContext(context.Background(), name)
+}
+
+// MuteTimingContext
+func (c *Client) MuteTimingContext(ctx context.Context, name string) (MuteTiming, error) {
 	mt := MuteTiming{}
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", name)
-	err := c.request("GET", uri, nil, nil, &mt)
+	err := c.request(ctx, "GET", uri, nil, nil, &mt)
 	return mt, err
 }
 
 // NewMuteTiming creates a new mute timing.
 func (c *Client) NewMuteTiming(mt *MuteTiming) error {
+	return c.NewMuteTimingContext(context.Background(), mt)
+}
+
+// NewMuteTimingContext
+func (c *Client) NewMuteTimingContext(ctx context.Context, mt *MuteTiming) error {
 	req, err := json.Marshal(mt)
 	if err != nil {
 		return err
 	}
 
-	return c.request("POST", "/api/v1/provisioning/mute-timings", nil, bytes.NewBuffer(req), nil)
+	return c.request(ctx, "POST", "/api/v1/provisioning/mute-timings", nil, bytes.NewBuffer(req), nil)
 }
 
 // UpdateMuteTiming updates a mute timing.
 func (c *Client) UpdateMuteTiming(mt *MuteTiming) error {
+	return c.UpdateMuteTimingContext(context.Background(), mt)
+}
+
+// UpdateMuteTimingContext
+func (c *Client) UpdateMuteTimingContext(ctx context.Context, mt *MuteTiming) error {
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", mt.Name)
 	req, err := json.Marshal(mt)
 	if err != nil {
 		return err
 	}
 
-	return c.request("PUT", uri, nil, bytes.NewBuffer(req), nil)
+	return c.request(ctx, "PUT", uri, nil, bytes.NewBuffer(req), nil)
 }
 
 // DeleteMutetiming deletes a mute timing.
 func (c *Client) DeleteMuteTiming(name string) error {
+	return c.DeleteMuteTimingContext(context.Background(), name)
+}
+
+// DeleteMuteTimingContext
+func (c *Client) DeleteMuteTimingContext(ctx context.Context, name string) error {
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", name)
-	return c.request("DELETE", uri, nil, nil, nil)
+	return c.request(ctx, "DELETE", uri, nil, nil, nil)
 }

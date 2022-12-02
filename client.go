@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -63,7 +64,14 @@ func New(baseURL string, cfg Config) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) request(method, requestPath string, query url.Values, body io.Reader, responseStruct interface{}) error {
+func (c *Client) request(
+	ctx context.Context,
+	method string,
+	requestPath string,
+	query url.Values,
+	body io.Reader,
+	responseStruct interface{},
+) error {
 	var (
 		req          *http.Request
 		resp         *http.Response
@@ -84,7 +92,7 @@ func (c *Client) request(method, requestPath string, query url.Values, body io.R
 			body = bytes.NewReader(bodyBuffer.Bytes())
 		}
 
-		req, err = c.newRequest(method, requestPath, query, body)
+		req, err = c.newRequest(ctx, method, requestPath, query, body)
 		if err != nil {
 			return err
 		}
@@ -143,11 +151,11 @@ func (c *Client) request(method, requestPath string, query url.Values, body io.R
 	return nil
 }
 
-func (c *Client) newRequest(method, requestPath string, query url.Values, body io.Reader) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, method, requestPath string, query url.Values, body io.Reader) (*http.Request, error) {
 	url := c.baseURL
 	url.Path = path.Join(url.Path, requestPath)
 	url.RawQuery = query.Encode()
-	req, err := http.NewRequest(method, url.String(), body)
+	req, err := http.NewRequestWithContext(ctx, method, url.String(), body)
 	if err != nil {
 		return req, err
 	}

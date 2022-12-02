@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -105,20 +106,35 @@ func (m Matchers) MarshalJSON() ([]byte, error) {
 
 // NotificationPolicy fetches the notification policy tree.
 func (c *Client) NotificationPolicyTree() (NotificationPolicyTree, error) {
+	return c.NotificationPolicyTreeContext(context.Background())
+}
+
+// NotificationPolicyTreeContext does the same thing as NotificationPolicyTree(), but also takes in a context.
+func (c *Client) NotificationPolicyTreeContext(ctx context.Context) (NotificationPolicyTree, error) {
 	np := NotificationPolicyTree{}
-	err := c.request("GET", "/api/v1/provisioning/policies", nil, nil, &np)
+	err := c.request(ctx, "GET", "/api/v1/provisioning/policies", nil, nil, &np)
 	return np, err
 }
 
 // SetNotificationPolicy sets the notification policy tree.
 func (c *Client) SetNotificationPolicyTree(np *NotificationPolicyTree) error {
+	return c.SetNotificationPolicyTreeContext(context.Background(), np)
+}
+
+// SetNotificationPolicyTreeContext does the same thing as SetNotificationPolicyTree(), but also takes in a context.
+func (c *Client) SetNotificationPolicyTreeContext(ctx context.Context, np *NotificationPolicyTree) error {
 	req, err := json.Marshal(np)
 	if err != nil {
 		return err
 	}
-	return c.request("PUT", "/api/v1/provisioning/policies", nil, bytes.NewBuffer(req), nil)
+	return c.request(ctx, "PUT", "/api/v1/provisioning/policies", nil, bytes.NewBuffer(req), nil)
 }
 
 func (c *Client) ResetNotificationPolicyTree() error {
-	return c.request("DELETE", "/api/v1/provisioning/policies", nil, nil, nil)
+	return c.ResetNotificationPolicyTreeContext(context.Background())
+}
+
+// ResetNotificationPolicyTreeContext does the same thing as ResetNotificationPolicyTree(), but also takes in a context.
+func (c *Client) ResetNotificationPolicyTreeContext(ctx context.Context) error {
+	return c.request(ctx, "DELETE", "/api/v1/provisioning/policies", nil, nil, nil)
 }

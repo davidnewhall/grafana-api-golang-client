@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -54,9 +55,14 @@ type Report struct {
 
 // Report fetches and returns a Grafana report.
 func (c *Client) Report(id int64) (*Report, error) {
+	return c.ReportContext(context.Background(), id)
+}
+
+// ReportContext does the same thing as Report(), but also takes in a context.
+func (c *Client) ReportContext(ctx context.Context, id int64) (*Report, error) {
 	path := fmt.Sprintf("/api/reports/%d", id)
 	report := &Report{}
-	err := c.request("GET", path, nil, nil, report)
+	err := c.request(ctx, "GET", path, nil, nil, report)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +72,11 @@ func (c *Client) Report(id int64) (*Report, error) {
 
 // NewReport creates a new Grafana report.
 func (c *Client) NewReport(report Report) (int64, error) {
+	return c.NewReportContext(context.Background(), report)
+}
+
+// NewReportContext does the same thing as NewReport(), but also takes in a context.
+func (c *Client) NewReportContext(ctx context.Context, report Report) (int64, error) {
 	data, err := json.Marshal(report)
 	if err != nil {
 		return 0, err
@@ -75,7 +86,7 @@ func (c *Client) NewReport(report Report) (int64, error) {
 		ID int64
 	}{}
 
-	err = c.request("POST", "/api/reports", nil, bytes.NewBuffer(data), &result)
+	err = c.request(ctx, "POST", "/api/reports", nil, bytes.NewBuffer(data), &result)
 	if err != nil {
 		return 0, err
 	}
@@ -85,18 +96,28 @@ func (c *Client) NewReport(report Report) (int64, error) {
 
 // UpdateReport updates a Grafana report.
 func (c *Client) UpdateReport(report Report) error {
+	return c.UpdateReportContext(context.Background(), report)
+}
+
+// UpdateReportContext does the same thing as UpdateReport(), but also takes in a context.
+func (c *Client) UpdateReportContext(ctx context.Context, report Report) error {
 	path := fmt.Sprintf("/api/reports/%d", report.ID)
 	data, err := json.Marshal(report)
 	if err != nil {
 		return err
 	}
 
-	return c.request("PUT", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "PUT", path, nil, bytes.NewBuffer(data), nil)
 }
 
 // DeleteReport deletes the Grafana report whose ID it's passed.
 func (c *Client) DeleteReport(id int64) error {
+	return c.DeleteReportContext(context.Background(), id)
+}
+
+// DeleteReportContext does the same thing as DeleteReport(), but also takes in a context.
+func (c *Client) DeleteReportContext(ctx context.Context, id int64) error {
 	path := fmt.Sprintf("/api/reports/%d", id)
 
-	return c.request("DELETE", path, nil, nil, nil)
+	return c.request(ctx, "DELETE", path, nil, nil, nil)
 }

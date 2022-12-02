@@ -1,6 +1,7 @@
 package gapi
 
 import (
+	"context"
 	"net/url"
 )
 
@@ -24,6 +25,11 @@ type FolderDashboardSearchResponse struct {
 // FolderDashboardSearch uses the folder and dashboard search endpoint to find
 // dashboards based on the params passed in.
 func (c *Client) FolderDashboardSearch(params url.Values) (resp []FolderDashboardSearchResponse, err error) {
-	err = c.request("GET", "/api/search", params, nil, &resp)
+	return c.FolderDashboardSearchContext(context.Background(), params)
+}
+
+// FolderDashboardSearchContext does the same thing as FolderDashboardSearch(), but also takes in a context.
+func (c *Client) FolderDashboardSearchContext(ctx context.Context, params url.Values) (resp []FolderDashboardSearchResponse, err error) {
+	err = c.request(ctx, "GET", "/api/search", params, nil, &resp)
 	return
 }

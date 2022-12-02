@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -46,6 +47,11 @@ type UserSearch struct {
 
 // Users fetches and returns Grafana users.
 func (c *Client) Users() (users []UserSearch, err error) {
+	return c.UsersContext(context.Background())
+}
+
+// UsersContext does the same thing as Users(), but also takes in a context.
+func (c *Client) UsersContext(ctx context.Context) (users []UserSearch, err error) {
 	var (
 		page     = 1
 		newUsers []UserSearch
@@ -53,7 +59,7 @@ func (c *Client) Users() (users []UserSearch, err error) {
 	for len(newUsers) > 0 || page == 1 {
 		query := url.Values{}
 		query.Add("page", fmt.Sprintf("%d", page))
-		if err = c.request("GET", "/api/users", query, nil, &newUsers); err != nil {
+		if err = c.request(ctx, "GET", "/api/users", query, nil, &newUsers); err != nil {
 			return
 		}
 		users = append(users, newUsers...)
@@ -65,23 +71,38 @@ func (c *Client) Users() (users []UserSearch, err error) {
 
 // User fetches a user by ID.
 func (c *Client) User(id int64) (user User, err error) {
-	err = c.request("GET", fmt.Sprintf("/api/users/%d", id), nil, nil, &user)
+	return c.UserContext(context.Background(), id)
+}
+
+// UserContext does the same thing as User(), but also takes in a context.
+func (c *Client) UserContext(ctx context.Context, id int64) (user User, err error) {
+	err = c.request(ctx, "GET", fmt.Sprintf("/api/users/%d", id), nil, nil, &user)
 	return
 }
 
 // UserByEmail fetches a user by email address.
 func (c *Client) UserByEmail(email string) (user User, err error) {
+	return c.UserByEmailContext(context.Background(), email)
+}
+
+// UserByEmailContext does the same thing as UserByEmail(), but also takes in a context.
+func (c *Client) UserByEmailContext(ctx context.Context, email string) (user User, err error) {
 	query := url.Values{}
 	query.Add("loginOrEmail", email)
-	err = c.request("GET", "/api/users/lookup", query, nil, &user)
+	err = c.request(ctx, "GET", "/api/users/lookup", query, nil, &user)
 	return
 }
 
 // UserUpdate updates a user by ID.
 func (c *Client) UserUpdate(u User) error {
+	return c.UserUpdateContext(context.Background(), u)
+}
+
+// UserUpdateContext does the same thing as UserUpdate(), but also takes in a context.
+func (c *Client) UserUpdateContext(ctx context.Context, u User) error {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return err
 	}
-	return c.request("PUT", fmt.Sprintf("/api/users/%d", u.ID), nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "PUT", fmt.Sprintf("/api/users/%d", u.ID), nil, bytes.NewBuffer(data), nil)
 }

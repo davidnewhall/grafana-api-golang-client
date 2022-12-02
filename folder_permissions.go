@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -44,8 +45,13 @@ type PermissionItem struct {
 
 // FolderPermissions fetches and returns the permissions for the folder whose ID it's passed.
 func (c *Client) FolderPermissions(fid string) ([]*FolderPermission, error) {
+	return c.FolderPermissionsContext(context.Background(), fid)
+}
+
+// FolderPermissionsContext does the same thing as FolderPermissions(), but also takes in a context.
+func (c *Client) FolderPermissionsContext(ctx context.Context, fid string) ([]*FolderPermission, error) {
 	permissions := make([]*FolderPermission, 0)
-	err := c.request("GET", fmt.Sprintf("/api/folders/%s/permissions", fid), nil, nil, &permissions)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/folders/%s/permissions", fid), nil, nil, &permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -55,11 +61,16 @@ func (c *Client) FolderPermissions(fid string) ([]*FolderPermission, error) {
 
 // UpdateFolderPermissions remove existing permissions if items are not included in the request.
 func (c *Client) UpdateFolderPermissions(fid string, items *PermissionItems) error {
+	return c.UpdateFolderPermissionsContext(context.Background(), fid, items)
+}
+
+// UpdateFolderPermissionsContext does the same thing as UpdateFolderPermissions(), but also takes in a context.
+func (c *Client) UpdateFolderPermissionsContext(ctx context.Context, fid string, items *PermissionItems) error {
 	path := fmt.Sprintf("/api/folders/%s/permissions", fid)
 	data, err := json.Marshal(items)
 	if err != nil {
 		return err
 	}
 
-	return c.request("POST", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "POST", path, nil, bytes.NewBuffer(data), nil)
 }

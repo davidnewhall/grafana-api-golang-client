@@ -1,6 +1,9 @@
 package gapi
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 // CloudRegion represents a Grafana Cloud region.
 // https://grafana.com/docs/grafana-cloud/reference/cloud-api/#list-regions
@@ -66,15 +69,25 @@ type CloudRegionsResponse struct {
 
 // GetCloudRegions fetches and returns all Grafana Cloud regions.
 func (c *Client) GetCloudRegions() (CloudRegionsResponse, error) {
+	return c.GetCloudRegionsContext(context.Background())
+}
+
+// GetCloudRegionsContext does the same thing as GetCloudRegions(), but also takes in a context.
+func (c *Client) GetCloudRegionsContext(ctx context.Context) (CloudRegionsResponse, error) {
 	var regions CloudRegionsResponse
-	err := c.request("GET", "/api/stack-regions", nil, nil, &regions)
+	err := c.request(ctx, "GET", "/api/stack-regions", nil, nil, &regions)
 	return regions, err
 }
 
 // GetCloudRegionBySlug fetches and returns the cloud region which matches the given slug.
 // You can also provide a numeric region ID.
 func (c *Client) GetCloudRegionBySlug(slug string) (CloudRegion, error) {
+	return c.GetCloudRegionBySlugContext(context.Background(), slug)
+}
+
+// GetCloudRegionBySlugContext does the same thing as GetCloudRegionBySlug(), but also takes in a context.
+func (c *Client) GetCloudRegionBySlugContext(ctx context.Context, slug string) (CloudRegion, error) {
 	var region CloudRegion
-	err := c.request("GET", fmt.Sprintf("/api/stack-regions/%s", slug), nil, nil, &region)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/stack-regions/%s", slug), nil, nil, &region)
 	return region, err
 }

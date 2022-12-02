@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -12,13 +13,18 @@ import (
 //
 // See https://grafana.com/docs/grafana-cloud/api/#create-grafana-api-keys for more information.
 func (c *Client) CreateGrafanaAPIKeyFromCloud(stack string, input *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error) {
+	return c.CreateGrafanaAPIKeyFromCloudContext(context.Background(), stack, input)
+}
+
+// CreateGrafanaAPIKeyFromCloudContext does the same thing as CreateGrafanaAPIKeyFromCloud(), but also takes in a context.
+func (c *Client) CreateGrafanaAPIKeyFromCloudContext(ctx context.Context, stack string, input *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error) {
 	data, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &CreateAPIKeyResponse{}
-	err = c.request("POST", fmt.Sprintf("/api/instances/%s/api/auth/keys", stack), nil, bytes.NewBuffer(data), resp)
+	err = c.request(ctx, "POST", fmt.Sprintf("/api/instances/%s/api/auth/keys", stack), nil, bytes.NewBuffer(data), resp)
 	return resp, err
 }
 
@@ -26,6 +32,11 @@ func (c *Client) CreateGrafanaAPIKeyFromCloud(stack string, input *CreateAPIKeyR
 // the Grafana Cloud API key to fully manage API keys on the Grafana API. The only thing we can do is to create
 // a temporary Admin key, and create a Grafana API client with that.
 func (c *Client) CreateTemporaryStackGrafanaClient(stackSlug, tempKeyPrefix string, tempKeyDuration time.Duration) (tempClient *Client, cleanup func() error, err error) {
+	return c.CreateTemporaryStackGrafanaClientContext(context.Background(), stackSlug, tempKeyPrefix, tempKeyDuration)
+}
+
+// CreateTemporaryStackGrafanaClientContext does the same thing as CreateTemporaryStackGrafanaClient(), but also takes in a context.
+func (c *Client) CreateTemporaryStackGrafanaClientContext(ctx context.Context, stackSlug, tempKeyPrefix string, tempKeyDuration time.Duration) (tempClient *Client, cleanup func() error, err error) {
 	stack, err := c.StackBySlug(stackSlug)
 	if err != nil {
 		return nil, nil, err

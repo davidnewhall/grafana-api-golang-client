@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -29,8 +30,13 @@ type ServiceAccountPermissionItem struct {
 
 // GetServiceAccountPermissions fetches and returns the permissions for the service account whose ID it's passed in.
 func (c *Client) GetServiceAccountPermissions(id int64) ([]*ServiceAccountPermission, error) {
+	return c.GetServiceAccountPermissionsContext(context.Background(), id)
+}
+
+// GetServiceAccountPermissionsContext does the same thing as GetServiceAccountPermissions(), but also takes in a context.
+func (c *Client) GetServiceAccountPermissionsContext(ctx context.Context, id int64) ([]*ServiceAccountPermission, error) {
 	permissions := make([]*ServiceAccountPermission, 0)
-	err := c.request("GET", fmt.Sprintf("/api/access-control/serviceaccounts/%d", id), nil, nil, &permissions)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/access-control/serviceaccounts/%d", id), nil, nil, &permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -40,11 +46,16 @@ func (c *Client) GetServiceAccountPermissions(id int64) ([]*ServiceAccountPermis
 
 // UpdateServiceAccountPermissions updates service account permissions for teams and users included in the request.
 func (c *Client) UpdateServiceAccountPermissions(id int64, items *ServiceAccountPermissionItems) error {
+	return c.UpdateServiceAccountPermissionsContext(context.Background(), id, items)
+}
+
+// UpdateServiceAccountPermissionsContext does the same thing as UpdateServiceAccountPermissions(), but also takes in a context.
+func (c *Client) UpdateServiceAccountPermissionsContext(ctx context.Context, id int64, items *ServiceAccountPermissionItems) error {
 	path := fmt.Sprintf("/api/access-control/serviceaccounts/%d", id)
 	data, err := json.Marshal(items)
 	if err != nil {
 		return err
 	}
 
-	return c.request("POST", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "POST", path, nil, bytes.NewBuffer(data), nil)
 }

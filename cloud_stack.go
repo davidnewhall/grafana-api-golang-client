@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -110,8 +111,13 @@ type UpdateStackInput struct {
 
 // Stacks fetches and returns the Grafana stacks.
 func (c *Client) Stacks() (StackItems, error) {
+	return c.StacksContext(context.Background())
+}
+
+// StacksContext does the same thing as Stacks(), but also takes in a context.
+func (c *Client) StacksContext(ctx context.Context) (StackItems, error) {
 	stacks := StackItems{}
-	err := c.request("GET", "/api/instances", nil, nil, &stacks)
+	err := c.request(ctx, "GET", "/api/instances", nil, nil, &stacks)
 	if err != nil {
 		return stacks, err
 	}
@@ -121,8 +127,13 @@ func (c *Client) Stacks() (StackItems, error) {
 
 // StackByName fetches and returns the stack whose slug it's passed.
 func (c *Client) StackBySlug(slug string) (Stack, error) {
+	return c.StackBySlugContext(context.Background(), slug)
+}
+
+// StackBySlugContext does the same thing as StackBySlug(), but also takes in a context.
+func (c *Client) StackBySlugContext(ctx context.Context, slug string) (Stack, error) {
 	stack := Stack{}
-	err := c.request("GET", fmt.Sprintf("/api/instances/%s", slug), nil, nil, &stack)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/instances/%s", slug), nil, nil, &stack)
 
 	if err != nil {
 		return stack, err
@@ -134,8 +145,13 @@ func (c *Client) StackBySlug(slug string) (Stack, error) {
 // StackByID fetches and returns the stack whose name it's passed.
 // This returns deleted instances as well with `status=deleted`.
 func (c *Client) StackByID(id int64) (Stack, error) {
+	return c.StackByIDContext(context.Background(), id)
+}
+
+// StackByIDContext does the same thing as StackByID(), but also takes in a context.
+func (c *Client) StackByIDContext(ctx context.Context, id int64) (Stack, error) {
 	stack := Stack{}
-	err := c.request("GET", fmt.Sprintf("/api/instances/%d", id), nil, nil, &stack)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/instances/%d", id), nil, nil, &stack)
 
 	if err != nil {
 		return stack, err
@@ -146,6 +162,11 @@ func (c *Client) StackByID(id int64) (Stack, error) {
 
 // NewStack creates a new Grafana Stack
 func (c *Client) NewStack(stack *CreateStackInput) (int64, error) {
+	return c.NewStackContext(context.Background(), stack)
+}
+
+// NewStackContext does the same thing as NewStack(), but also takes in a context.
+func (c *Client) NewStackContext(ctx context.Context, stack *CreateStackInput) (int64, error) {
 	data, err := json.Marshal(stack)
 	if err != nil {
 		return 0, err
@@ -155,7 +176,7 @@ func (c *Client) NewStack(stack *CreateStackInput) (int64, error) {
 		ID int64 `json:"id"`
 	}{}
 
-	err = c.request("POST", "/api/instances", nil, bytes.NewBuffer(data), &result)
+	err = c.request(ctx, "POST", "/api/instances", nil, bytes.NewBuffer(data), &result)
 	if err != nil {
 		return 0, err
 	}
@@ -166,15 +187,25 @@ func (c *Client) NewStack(stack *CreateStackInput) (int64, error) {
 // UpdateOrg updates a Grafana stack.
 // Only name, slug and description can be updated. No other parameters of the stack are updateable
 func (c *Client) UpdateStack(id int64, stack *UpdateStackInput) error {
+	return c.UpdateStackContext(context.Background(), id, stack)
+}
+
+// UpdateStackContext does the same thing as UpdateStack(), but also takes in a context.
+func (c *Client) UpdateStackContext(ctx context.Context, id int64, stack *UpdateStackInput) error {
 	data, err := json.Marshal(stack)
 	if err != nil {
 		return err
 	}
 
-	return c.request("POST", fmt.Sprintf("/api/instances/%d", id), nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "POST", fmt.Sprintf("/api/instances/%d", id), nil, bytes.NewBuffer(data), nil)
 }
 
 // DeleteStack deletes the Grafana stack whose slug it passed in.
 func (c *Client) DeleteStack(stackSlug string) error {
-	return c.request("DELETE", fmt.Sprintf("/api/instances/%s", stackSlug), nil, nil, nil)
+	return c.DeleteStackContext(context.Background(), stackSlug)
+}
+
+// DeleteStackContext does the same thing as DeleteStack(), but also takes in a context.
+func (c *Client) DeleteStackContext(ctx context.Context, stackSlug string) error {
+	return c.request(ctx, "DELETE", fmt.Sprintf("/api/instances/%s", stackSlug), nil, nil, nil)
 }

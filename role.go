@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -25,8 +26,13 @@ type Permission struct {
 
 // GetRole gets a role with permissions for the given UID. Available only in Grafana Enterprise 8.+.
 func (c *Client) GetRole(uid string) (*Role, error) {
+	return c.GetRoleContext(context.Background(), uid)
+}
+
+// GetRoleContext does the same thing as GetRole(), but also takes in a context.
+func (c *Client) GetRoleContext(ctx context.Context, uid string) (*Role, error) {
 	r := &Role{}
-	err := c.request("GET", buildURL(uid), nil, nil, r)
+	err := c.request(ctx, "GET", buildURL(uid), nil, nil, r)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +41,11 @@ func (c *Client) GetRole(uid string) (*Role, error) {
 
 // NewRole creates a new role with permissions. Available only in Grafana Enterprise 8.+.
 func (c *Client) NewRole(role Role) (*Role, error) {
+	return c.NewRoleContext(context.Background(), role)
+}
+
+// NewRoleContext does the same thing as NewRole(), but also takes in a context.
+func (c *Client) NewRoleContext(ctx context.Context, role Role) (*Role, error) {
 	data, err := json.Marshal(role)
 	if err != nil {
 		return nil, err
@@ -42,7 +53,7 @@ func (c *Client) NewRole(role Role) (*Role, error) {
 
 	r := &Role{}
 
-	err = c.request("POST", "/api/access-control/roles", nil, bytes.NewBuffer(data), &r)
+	err = c.request(ctx, "POST", "/api/access-control/roles", nil, bytes.NewBuffer(data), &r)
 	if err != nil {
 		return nil, err
 	}
@@ -52,22 +63,32 @@ func (c *Client) NewRole(role Role) (*Role, error) {
 
 // UpdateRole updates the role and permissions. Available only in Grafana Enterprise 8.+.
 func (c *Client) UpdateRole(role Role) error {
+	return c.UpdateRoleContext(context.Background(), role)
+}
+
+// UpdateRoleContext does the same thing as UpdateRole(), but also takes in a context.
+func (c *Client) UpdateRoleContext(ctx context.Context, role Role) error {
 	data, err := json.Marshal(role)
 	if err != nil {
 		return err
 	}
 
-	err = c.request("PUT", buildURL(role.UID), nil, bytes.NewBuffer(data), nil)
+	err = c.request(ctx, "PUT", buildURL(role.UID), nil, bytes.NewBuffer(data), nil)
 
 	return err
 }
 
 // DeleteRole deletes the role with it's permissions. Available only in Grafana Enterprise 8.+.
 func (c *Client) DeleteRole(uid string, global bool) error {
+	return c.DeleteRoleContext(context.Background(), uid, global)
+}
+
+// DeleteRoleContext does the same thing as DeleteRole(), but also takes in a context.
+func (c *Client) DeleteRoleContext(ctx context.Context, uid string, global bool) error {
 	qp := map[string][]string{
 		"global": {fmt.Sprint(global)},
 	}
-	return c.request("DELETE", buildURL(uid), qp, nil, nil)
+	return c.request(ctx, "DELETE", buildURL(uid), qp, nil, nil)
 }
 
 func buildURL(uid string) string {

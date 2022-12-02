@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -74,6 +75,11 @@ type DeleteServiceAccountResponse struct {
 
 // CreateServiceAccount creates a new Grafana service account.
 func (c *Client) CreateServiceAccount(request CreateServiceAccountRequest) (*ServiceAccountDTO, error) {
+	return c.CreateServiceAccountContext(context.Background(), request)
+}
+
+// CreateServiceAccountContext does the same thing as CreateServiceAccount(), but also takes in a context.
+func (c *Client) CreateServiceAccountContext(ctx context.Context, request CreateServiceAccountRequest) (*ServiceAccountDTO, error) {
 	response := ServiceAccountDTO{}
 
 	data, err := json.Marshal(request)
@@ -81,12 +87,17 @@ func (c *Client) CreateServiceAccount(request CreateServiceAccountRequest) (*Ser
 		return nil, err
 	}
 
-	err = c.request(http.MethodPost, "/api/serviceaccounts/", nil, bytes.NewBuffer(data), &response)
+	err = c.request(ctx, http.MethodPost, "/api/serviceaccounts/", nil, bytes.NewBuffer(data), &response)
 	return &response, err
 }
 
 // CreateServiceAccountToken creates a new Grafana service account token.
 func (c *Client) CreateServiceAccountToken(request CreateServiceAccountTokenRequest) (*CreateServiceAccountTokenResponse, error) {
+	return c.CreateServiceAccountTokenContext(context.Background(), request)
+}
+
+// CreateServiceAccountTokenContext does the same thing as CreateServiceAccountToken(), but also takes in a context.
+func (c *Client) CreateServiceAccountTokenContext(ctx context.Context, request CreateServiceAccountTokenRequest) (*CreateServiceAccountTokenResponse, error) {
 	response := CreateServiceAccountTokenResponse{}
 
 	data, err := json.Marshal(request)
@@ -94,7 +105,7 @@ func (c *Client) CreateServiceAccountToken(request CreateServiceAccountTokenRequ
 		return nil, err
 	}
 
-	err = c.request(http.MethodPost,
+	err = c.request(ctx, http.MethodPost,
 		fmt.Sprintf("/api/serviceaccounts/%d/tokens", request.ServiceAccountID),
 		nil, bytes.NewBuffer(data), &response)
 	return &response, err
@@ -102,6 +113,11 @@ func (c *Client) CreateServiceAccountToken(request CreateServiceAccountTokenRequ
 
 // UpdateServiceAccount updates a specific serviceAccountID
 func (c *Client) UpdateServiceAccount(serviceAccountID int64, request UpdateServiceAccountRequest) (*ServiceAccountDTO, error) {
+	return c.UpdateServiceAccountContext(context.Background(), serviceAccountID, request)
+}
+
+// UpdateServiceAccountContext does the same thing as UpdateServiceAccount(), but also takes in a context.
+func (c *Client) UpdateServiceAccountContext(ctx context.Context, serviceAccountID int64, request UpdateServiceAccountRequest) (*ServiceAccountDTO, error) {
 	response := ServiceAccountDTO{}
 
 	data, err := json.Marshal(request)
@@ -109,7 +125,7 @@ func (c *Client) UpdateServiceAccount(serviceAccountID int64, request UpdateServ
 		return nil, err
 	}
 
-	err = c.request(http.MethodPatch,
+	err = c.request(ctx, http.MethodPatch,
 		fmt.Sprintf("/api/serviceaccounts/%d", serviceAccountID),
 		nil, bytes.NewBuffer(data), &response)
 	return &response, err
@@ -117,9 +133,14 @@ func (c *Client) UpdateServiceAccount(serviceAccountID int64, request UpdateServ
 
 // GetServiceAccounts retrieves a list of all service accounts for the organization.
 func (c *Client) GetServiceAccounts() ([]ServiceAccountDTO, error) {
+	return c.GetServiceAccountsContext(context.Background())
+}
+
+// GetServiceAccountsContext does the same thing as GetServiceAccounts(), but also takes in a context.
+func (c *Client) GetServiceAccountsContext(ctx context.Context) ([]ServiceAccountDTO, error) {
 	response := RetrieveServiceAccountResponse{}
 
-	if err := c.request(http.MethodGet, "/api/serviceaccounts/search", nil, nil, &response); err != nil {
+	if err := c.request(ctx, http.MethodGet, "/api/serviceaccounts/search", nil, nil, &response); err != nil {
 		return nil, err
 	}
 
@@ -128,9 +149,14 @@ func (c *Client) GetServiceAccounts() ([]ServiceAccountDTO, error) {
 
 // GetServiceAccountTokens retrieves a list of all service account tokens for a specific service account.
 func (c *Client) GetServiceAccountTokens(serviceAccountID int64) ([]GetServiceAccountTokensResponse, error) {
+	return c.GetServiceAccountTokensContext(context.Background(), serviceAccountID)
+}
+
+// GetServiceAccountTokensContext does the same thing as GetServiceAccountTokens(), but also takes in a context.
+func (c *Client) GetServiceAccountTokensContext(ctx context.Context, serviceAccountID int64) ([]GetServiceAccountTokensResponse, error) {
 	response := make([]GetServiceAccountTokensResponse, 0)
 
-	err := c.request(http.MethodGet,
+	err := c.request(ctx, http.MethodGet,
 		fmt.Sprintf("/api/serviceaccounts/%d/tokens", serviceAccountID),
 		nil, nil, &response)
 	return response, err
@@ -138,18 +164,28 @@ func (c *Client) GetServiceAccountTokens(serviceAccountID int64) ([]GetServiceAc
 
 // DeleteServiceAccount deletes the Grafana service account with the specified ID.
 func (c *Client) DeleteServiceAccount(serviceAccountID int64) (*DeleteServiceAccountResponse, error) {
+	return c.DeleteServiceAccountContext(context.Background(), serviceAccountID)
+}
+
+// DeleteServiceAccountContext does the same thing as DeleteServiceAccount(), but also takes in a context.
+func (c *Client) DeleteServiceAccountContext(ctx context.Context, serviceAccountID int64) (*DeleteServiceAccountResponse, error) {
 	response := DeleteServiceAccountResponse{}
 
 	path := fmt.Sprintf("/api/serviceaccounts/%d", serviceAccountID)
-	err := c.request(http.MethodDelete, path, nil, nil, &response)
+	err := c.request(ctx, http.MethodDelete, path, nil, nil, &response)
 	return &response, err
 }
 
 // DeleteServiceAccountToken deletes the Grafana service account token with the specified ID.
 func (c *Client) DeleteServiceAccountToken(serviceAccountID, tokenID int64) (*DeleteServiceAccountResponse, error) {
+	return c.DeleteServiceAccountTokenContext(context.Background(), serviceAccountID, tokenID)
+}
+
+// DeleteServiceAccountTokenContext does the same thing as DeleteServiceAccountToken(), but also takes in a context.
+func (c *Client) DeleteServiceAccountTokenContext(ctx context.Context, serviceAccountID, tokenID int64) (*DeleteServiceAccountResponse, error) {
 	response := DeleteServiceAccountResponse{}
 
 	path := fmt.Sprintf("/api/serviceaccounts/%d/tokens/%d", serviceAccountID, tokenID)
-	err := c.request(http.MethodDelete, path, nil, nil, &response)
+	err := c.request(ctx, http.MethodDelete, path, nil, nil, &response)
 	return &response, err
 }

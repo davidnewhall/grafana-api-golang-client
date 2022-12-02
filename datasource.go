@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -37,6 +38,11 @@ type DataSource struct {
 
 // NewDataSource creates a new Grafana data source.
 func (c *Client) NewDataSource(s *DataSource) (int64, error) {
+	return c.NewDataSourceContext(context.Background(), s)
+}
+
+// NewDataSourceContext does the same thing as NewDataSource(), but also takes in a context.
+func (c *Client) NewDataSourceContext(ctx context.Context, s *DataSource) (int64, error) {
 	data, err := json.Marshal(s)
 	if err != nil {
 		return 0, err
@@ -46,7 +52,7 @@ func (c *Client) NewDataSource(s *DataSource) (int64, error) {
 		ID int64 `json:"id"`
 	}{}
 
-	err = c.request("POST", "/api/datasources", nil, bytes.NewBuffer(data), &result)
+	err = c.request(ctx, "POST", "/api/datasources", nil, bytes.NewBuffer(data), &result)
 	if err != nil {
 		return 0, err
 	}
@@ -56,30 +62,45 @@ func (c *Client) NewDataSource(s *DataSource) (int64, error) {
 
 // UpdateDataSource updates a Grafana data source.
 func (c *Client) UpdateDataSource(s *DataSource) error {
+	return c.UpdateDataSourceContext(context.Background(), s)
+}
+
+// UpdateDataSourceContext does the same thing as UpdateDataSource(), but also takes in a context.
+func (c *Client) UpdateDataSourceContext(ctx context.Context, s *DataSource) error {
 	path := fmt.Sprintf("/api/datasources/%d", s.ID)
 	data, err := json.Marshal(s)
 	if err != nil {
 		return err
 	}
 
-	return c.request("PUT", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "PUT", path, nil, bytes.NewBuffer(data), nil)
 }
 
 func (c *Client) UpdateDataSourceByUID(s *DataSource) error {
+	return c.UpdateDataSourceByUIDContext(context.Background(), s)
+}
+
+// UpdateDataSourceByUIDContext does the same thing as UpdateDataSourceByUID(), but also takes in a context.
+func (c *Client) UpdateDataSourceByUIDContext(ctx context.Context, s *DataSource) error {
 	path := fmt.Sprintf("/api/datasources/uid/%s", s.UID)
 	data, err := json.Marshal(s)
 	if err != nil {
 		return err
 	}
 
-	return c.request("PUT", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "PUT", path, nil, bytes.NewBuffer(data), nil)
 }
 
 // DataSource fetches and returns the Grafana data source whose ID it's passed.
 func (c *Client) DataSource(id int64) (*DataSource, error) {
+	return c.DataSourceContext(context.Background(), id)
+}
+
+// DataSourceContext does the same thing as DataSource(), but also takes in a context.
+func (c *Client) DataSourceContext(ctx context.Context, id int64) (*DataSource, error) {
 	path := fmt.Sprintf("/api/datasources/%d", id)
 	result := &DataSource{}
-	err := c.request("GET", path, nil, nil, result)
+	err := c.request(ctx, "GET", path, nil, nil, result)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +110,14 @@ func (c *Client) DataSource(id int64) (*DataSource, error) {
 
 // DataSourceByUID fetches and returns the Grafana data source whose UID is passed.
 func (c *Client) DataSourceByUID(uid string) (*DataSource, error) {
+	return c.DataSourceByUIDContext(context.Background(), uid)
+}
+
+// DataSourceByUIDContext does the same thing as DataSourceByUID(), but also takes in a context.
+func (c *Client) DataSourceByUIDContext(ctx context.Context, uid string) (*DataSource, error) {
 	path := fmt.Sprintf("/api/datasources/uid/%s", uid)
 	result := &DataSource{}
-	err := c.request("GET", path, nil, nil, result)
+	err := c.request(ctx, "GET", path, nil, nil, result)
 	if err != nil {
 		return nil, err
 	}
@@ -101,13 +127,18 @@ func (c *Client) DataSourceByUID(uid string) (*DataSource, error) {
 
 // DataSourceIDByName returns the Grafana data source ID by name.
 func (c *Client) DataSourceIDByName(name string) (int64, error) {
+	return c.DataSourceIDByNameContext(context.Background(), name)
+}
+
+// DataSourceIDByNameContext does the same thing as DataSourceIDByName(), but also takes in a context.
+func (c *Client) DataSourceIDByNameContext(ctx context.Context, name string) (int64, error) {
 	path := fmt.Sprintf("/api/datasources/id/%s", name)
 
 	result := struct {
 		ID int64 `json:"id"`
 	}{}
 
-	err := c.request("GET", path, nil, nil, &result)
+	err := c.request(ctx, "GET", path, nil, nil, &result)
 	if err != nil {
 		return 0, err
 	}
@@ -117,8 +148,13 @@ func (c *Client) DataSourceIDByName(name string) (int64, error) {
 
 // DataSources returns all data sources as defined in Grafana.
 func (c *Client) DataSources() ([]*DataSource, error) {
+	return c.DataSourcesContext(context.Background())
+}
+
+// DataSourcesContext does the same thing as DataSources(), but also takes in a context.
+func (c *Client) DataSourcesContext(ctx context.Context) ([]*DataSource, error) {
 	result := make([]*DataSource, 0)
-	err := c.request("GET", "/api/datasources", nil, nil, &result)
+	err := c.request(ctx, "GET", "/api/datasources", nil, nil, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -128,14 +164,24 @@ func (c *Client) DataSources() ([]*DataSource, error) {
 
 // DeleteDataSource deletes the Grafana data source whose ID it's passed.
 func (c *Client) DeleteDataSource(id int64) error {
+	return c.DeleteDataSourceContext(context.Background(), id)
+}
+
+// DeleteDataSourceContext does the same thing as DeleteDataSource(), but also takes in a context.
+func (c *Client) DeleteDataSourceContext(ctx context.Context, id int64) error {
 	path := fmt.Sprintf("/api/datasources/%d", id)
 
-	return c.request("DELETE", path, nil, nil, nil)
+	return c.request(ctx, "DELETE", path, nil, nil, nil)
 }
 
 // DeleteDataSourceByName deletes the Grafana data source whose NAME it's passed.
 func (c *Client) DeleteDataSourceByName(name string) error {
+	return c.DeleteDataSourceByNameContext(context.Background(), name)
+}
+
+// DeleteDataSourceByNameContext does the same thing as DeleteDataSourceByName(), but also takes in a context.
+func (c *Client) DeleteDataSourceByNameContext(ctx context.Context, name string) error {
 	path := fmt.Sprintf("/api/datasources/name/%s", name)
 
-	return c.request("DELETE", path, nil, nil, nil)
+	return c.request(ctx, "DELETE", path, nil, nil, nil)
 }

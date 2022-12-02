@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -64,9 +65,14 @@ type RelativeTimeRange struct {
 
 // AlertRule fetches a single alert rule, identified by its UID.
 func (c *Client) AlertRule(uid string) (AlertRule, error) {
+	return c.AlertRuleContext(context.Background(), uid)
+}
+
+// AlertRuleContext does the same thing as AlertRule(), but also takes in a context.
+func (c *Client) AlertRuleContext(ctx context.Context, uid string) (AlertRule, error) {
 	path := fmt.Sprintf("/api/v1/provisioning/alert-rules/%s", uid)
 	result := AlertRule{}
-	err := c.request("GET", path, nil, nil, &result)
+	err := c.request(ctx, "GET", path, nil, nil, &result)
 	if err != nil {
 		return AlertRule{}, err
 	}
@@ -75,14 +81,24 @@ func (c *Client) AlertRule(uid string) (AlertRule, error) {
 
 // AlertRuleGroup fetches a group of alert rules, identified by its name and the UID of its folder.
 func (c *Client) AlertRuleGroup(folderUID string, name string) (RuleGroup, error) {
+	return c.AlertRuleGroupContext(context.Background(), folderUID, name)
+}
+
+// AlertRuleGroupContext does the same thing as AlertRuleGroup(), but also takes in a context.
+func (c *Client) AlertRuleGroupContext(ctx context.Context, folderUID string, name string) (RuleGroup, error) {
 	path := fmt.Sprintf("/api/v1/provisioning/folder/%s/rule-groups/%s", folderUID, name)
 	result := RuleGroup{}
-	err := c.request("GET", path, nil, nil, &result)
+	err := c.request(ctx, "GET", path, nil, nil, &result)
 	return result, err
 }
 
 // SetAlertRuleGroup overwrites an existing rule group on the server.
 func (c *Client) SetAlertRuleGroup(group RuleGroup) error {
+	return c.SetAlertRuleGroupContext(context.Background(), group)
+}
+
+// SetAlertRuleGroupContext does the same thing as SetAlertRuleGroup(), but also takes in a context.
+func (c *Client) SetAlertRuleGroupContext(ctx context.Context, group RuleGroup) error {
 	syncCalculatedRuleGroupFields(&group)
 	folderUID := group.FolderUID
 	name := group.Title
@@ -92,18 +108,23 @@ func (c *Client) SetAlertRuleGroup(group RuleGroup) error {
 	}
 
 	uri := fmt.Sprintf("/api/v1/provisioning/folder/%s/rule-groups/%s", folderUID, name)
-	return c.request("PUT", uri, nil, bytes.NewBuffer(req), nil)
+	return c.request(ctx, "PUT", uri, nil, bytes.NewBuffer(req), nil)
 }
 
 // NewAlertRule creates a new alert rule and returns its UID.
 func (c *Client) NewAlertRule(ar *AlertRule) (string, error) {
+	return c.NewAlertRuleContext(context.Background(), ar)
+}
+
+// NewAlertRuleContext does the same thing as NewAlertRule(), but also takes in a context.
+func (c *Client) NewAlertRuleContext(ctx context.Context, ar *AlertRule) (string, error) {
 	syncCalculatedRuleFields(ar)
 	req, err := json.Marshal(ar)
 	if err != nil {
 		return "", err
 	}
 	result := AlertRule{}
-	err = c.request("POST", "/api/v1/provisioning/alert-rules", nil, bytes.NewBuffer(req), &result)
+	err = c.request(ctx, "POST", "/api/v1/provisioning/alert-rules", nil, bytes.NewBuffer(req), &result)
 	if err != nil {
 		return "", err
 	}
@@ -112,6 +133,11 @@ func (c *Client) NewAlertRule(ar *AlertRule) (string, error) {
 
 // UpdateAlertRule replaces an alert rule, identified by the alert rule's UID.
 func (c *Client) UpdateAlertRule(ar *AlertRule) error {
+	return c.UpdateAlertRuleContext(context.Background(), ar)
+}
+
+// UpdateAlertRuleContext does the same thing as UpdateAlertRule(), but also takes in a context.
+func (c *Client) UpdateAlertRuleContext(ctx context.Context, ar *AlertRule) error {
 	syncCalculatedRuleFields(ar)
 	uri := fmt.Sprintf("/api/v1/provisioning/alert-rules/%s", ar.UID)
 	req, err := json.Marshal(ar)
@@ -119,13 +145,18 @@ func (c *Client) UpdateAlertRule(ar *AlertRule) error {
 		return err
 	}
 
-	return c.request("PUT", uri, nil, bytes.NewBuffer(req), nil)
+	return c.request(ctx, "PUT", uri, nil, bytes.NewBuffer(req), nil)
 }
 
 // DeleteAlertRule deletes a alert rule, identified by the alert rule's UID.
 func (c *Client) DeleteAlertRule(uid string) error {
+	return c.DeleteAlertRuleContext(context.Background(), uid)
+}
+
+// DeleteAlertRuleContext does the same thing as DeleteAlertRule(), but also takes in a context.
+func (c *Client) DeleteAlertRuleContext(ctx context.Context, uid string) error {
 	uri := fmt.Sprintf("/api/v1/provisioning/alert-rules/%s", uid)
-	return c.request("DELETE", uri, nil, nil, nil)
+	return c.request(ctx, "DELETE", uri, nil, nil, nil)
 }
 
 func syncCalculatedRuleGroupFields(group *RuleGroup) {

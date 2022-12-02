@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 )
 
@@ -22,13 +23,18 @@ type SnapshotCreateResponse struct {
 
 // NewSnapshot creates a new Grafana snapshot.
 func (c *Client) NewSnapshot(snapshot Snapshot) (*SnapshotCreateResponse, error) {
+	return c.NewSnapshotContext(context.Background(), snapshot)
+}
+
+// NewSnapshotContext does the same thing as NewSnapshot(), but also takes in a context.
+func (c *Client) NewSnapshotContext(ctx context.Context, snapshot Snapshot) (*SnapshotCreateResponse, error) {
 	data, err := json.Marshal(snapshot)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &SnapshotCreateResponse{}
-	err = c.request("POST", "/api/snapshots", nil, bytes.NewBuffer(data), &result)
+	err = c.request(ctx, "POST", "/api/snapshots", nil, bytes.NewBuffer(data), &result)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -71,6 +72,11 @@ type LibraryPanelConnection struct {
 
 // NewLibraryPanel creates a new Grafana library panel.
 func (c *Client) NewLibraryPanel(panel LibraryPanel) (*LibraryPanel, error) {
+	return c.NewLibraryPanelContext(context.Background(), panel)
+}
+
+// NewLibraryPanelContext does the same thing as NewLibraryPanel(), but also takes in a context.
+func (c *Client) NewLibraryPanelContext(ctx context.Context, panel LibraryPanel) (*LibraryPanel, error) {
 	panel.Kind = int64(1)
 	data, err := json.Marshal(panel)
 	if err != nil {
@@ -78,7 +84,7 @@ func (c *Client) NewLibraryPanel(panel LibraryPanel) (*LibraryPanel, error) {
 	}
 
 	resp := &LibraryPanelCreateResponse{}
-	err = c.request("POST", "/api/library-elements", nil, bytes.NewBuffer(data), &resp)
+	err = c.request(ctx, "POST", "/api/library-elements", nil, bytes.NewBuffer(data), &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -88,10 +94,15 @@ func (c *Client) NewLibraryPanel(panel LibraryPanel) (*LibraryPanel, error) {
 
 // Dashboards fetches and returns all dashboards.
 func (c *Client) LibraryPanels() ([]LibraryPanel, error) {
+	return c.LibraryPanelsContext(context.Background())
+}
+
+// LibraryPanelsContext does the same thing as LibraryPanels(), but also takes in a context.
+func (c *Client) LibraryPanelsContext(ctx context.Context) ([]LibraryPanel, error) {
 	resp := &struct {
 		Result LibraryPanelGetAllResponse `json:"result"`
 	}{}
-	err := c.request("GET", "/api/library-elements", nil, nil, &resp)
+	err := c.request(ctx, "GET", "/api/library-elements", nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +112,15 @@ func (c *Client) LibraryPanels() ([]LibraryPanel, error) {
 
 // LibraryPanelByUID gets a library panel by UID.
 func (c *Client) LibraryPanelByUID(uid string) (*LibraryPanel, error) {
+	return c.LibraryPanelByUIDContext(context.Background(), uid)
+}
+
+// LibraryPanelByUIDContext does the same thing as LibraryPanelByUID(), but also takes in a context.
+func (c *Client) LibraryPanelByUIDContext(ctx context.Context, uid string) (*LibraryPanel, error) {
 	resp := &LibraryPanelCreateResponse{}
 	path := fmt.Sprintf("/api/library-elements/%s", uid)
 
-	err := c.request("GET", path, nil, nil, &resp)
+	err := c.request(ctx, "GET", path, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -114,12 +130,17 @@ func (c *Client) LibraryPanelByUID(uid string) (*LibraryPanel, error) {
 
 // LibraryPanelByName gets a library panel by name.
 func (c *Client) LibraryPanelByName(name string) (*LibraryPanel, error) {
+	return c.LibraryPanelByNameContext(context.Background(), name)
+}
+
+// LibraryPanelByNameContext does the same thing as LibraryPanelByName(), but also takes in a context.
+func (c *Client) LibraryPanelByNameContext(ctx context.Context, name string) (*LibraryPanel, error) {
 	var resp struct {
 		Result []LibraryPanel `json:"result"`
 	}
 	path := fmt.Sprintf("/api/library-elements/name/%s", name)
 
-	err := c.request("GET", path, nil, nil, &resp)
+	err := c.request(ctx, "GET", path, nil, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +154,11 @@ func (c *Client) LibraryPanelByName(name string) (*LibraryPanel, error) {
 
 // PatchLibraryPanel updates one or more properties of an existing panel that matches the specified UID.
 func (c *Client) PatchLibraryPanel(uid string, panel LibraryPanel) (*LibraryPanel, error) {
+	return c.PatchLibraryPanelContext(context.Background(), uid, panel)
+}
+
+// PatchLibraryPanelContext does the same thing as PatchLibraryPanel(), but also takes in a context.
+func (c *Client) PatchLibraryPanelContext(ctx context.Context, uid string, panel LibraryPanel) (*LibraryPanel, error) {
 	path := fmt.Sprintf("/api/library-elements/%s", uid)
 	panel.Kind = int64(1)
 
@@ -151,7 +177,7 @@ func (c *Client) PatchLibraryPanel(uid string, panel LibraryPanel) (*LibraryPane
 	}
 
 	resp := &LibraryPanelCreateResponse{}
-	err = c.request("PATCH", path, nil, bytes.NewBuffer(data), &resp)
+	err = c.request(ctx, "PATCH", path, nil, bytes.NewBuffer(data), &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -161,10 +187,15 @@ func (c *Client) PatchLibraryPanel(uid string, panel LibraryPanel) (*LibraryPane
 
 // DeleteLibraryPanel deletes a panel by UID.
 func (c *Client) DeleteLibraryPanel(uid string) (*LibraryPanelDeleteResponse, error) {
+	return c.DeleteLibraryPanelContext(context.Background(), uid)
+}
+
+// DeleteLibraryPanelContext does the same thing as DeleteLibraryPanel(), but also takes in a context.
+func (c *Client) DeleteLibraryPanelContext(ctx context.Context, uid string) (*LibraryPanelDeleteResponse, error) {
 	path := fmt.Sprintf("/api/library-elements/%s", uid)
 
 	resp := &LibraryPanelDeleteResponse{}
-	err := c.request("DELETE", path, nil, bytes.NewBuffer(nil), &resp)
+	err := c.request(ctx, "DELETE", path, nil, bytes.NewBuffer(nil), &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -174,13 +205,18 @@ func (c *Client) DeleteLibraryPanel(uid string) (*LibraryPanelDeleteResponse, er
 
 // LibraryPanelConnections gets library panel connections by UID.
 func (c *Client) LibraryPanelConnections(uid string) (*[]LibraryPanelConnection, error) {
+	return c.LibraryPanelConnectionsContext(context.Background(), uid)
+}
+
+// LibraryPanelConnectionsContext does the same thing as LibraryPanelConnections(), but also takes in a context.
+func (c *Client) LibraryPanelConnectionsContext(ctx context.Context, uid string) (*[]LibraryPanelConnection, error) {
 	path := fmt.Sprintf("/api/library-elements/%s/connections", uid)
 
 	resp := struct {
 		Result []LibraryPanelConnection `json:"result"`
 	}{}
 
-	err := c.request("GET", path, nil, bytes.NewBuffer(nil), &resp)
+	err := c.request(ctx, "GET", path, nil, bytes.NewBuffer(nil), &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +226,11 @@ func (c *Client) LibraryPanelConnections(uid string) (*[]LibraryPanelConnection,
 
 // LibraryPanelConnectedDashboards gets Dashboards using this Library Panel.
 func (c *Client) LibraryPanelConnectedDashboards(uid string) ([]FolderDashboardSearchResponse, error) {
+	return c.LibraryPanelConnectedDashboardsContext(context.Background(), uid)
+}
+
+// LibraryPanelConnectedDashboardsContext does the same thing as LibraryPanelConnectedDashboards(), but also takes in a context.
+func (c *Client) LibraryPanelConnectedDashboardsContext(ctx context.Context, uid string) ([]FolderDashboardSearchResponse, error) {
 	connections, err := c.LibraryPanelConnections(uid)
 	if err != nil {
 		return nil, err

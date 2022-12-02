@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -26,8 +27,13 @@ type DashboardPermission struct {
 
 // DashboardPermissions fetches and returns the permissions for the dashboard whose ID it's passed.
 func (c *Client) DashboardPermissions(id int64) ([]*DashboardPermission, error) {
+	return c.DashboardPermissionsContext(context.Background(), id)
+}
+
+// DashboardPermissionsContext does the same thing as DashboardPermissions(), but also takes in a context.
+func (c *Client) DashboardPermissionsContext(ctx context.Context, id int64) ([]*DashboardPermission, error) {
 	permissions := make([]*DashboardPermission, 0)
-	err := c.request("GET", fmt.Sprintf("/api/dashboards/id/%d/permissions", id), nil, nil, &permissions)
+	err := c.request(ctx, "GET", fmt.Sprintf("/api/dashboards/id/%d/permissions", id), nil, nil, &permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -37,11 +43,16 @@ func (c *Client) DashboardPermissions(id int64) ([]*DashboardPermission, error) 
 
 // UpdateDashboardPermissions remove existing permissions if items are not included in the request.
 func (c *Client) UpdateDashboardPermissions(id int64, items *PermissionItems) error {
+	return c.UpdateDashboardPermissionsContext(context.Background(), id, items)
+}
+
+// UpdateDashboardPermissionsContext does the same thing as UpdateDashboardPermissions(), but also takes in a context.
+func (c *Client) UpdateDashboardPermissionsContext(ctx context.Context, id int64, items *PermissionItems) error {
 	path := fmt.Sprintf("/api/dashboards/id/%d/permissions", id)
 	data, err := json.Marshal(items)
 	if err != nil {
 		return err
 	}
 
-	return c.request("POST", path, nil, bytes.NewBuffer(data), nil)
+	return c.request(ctx, "POST", path, nil, bytes.NewBuffer(data), nil)
 }
