@@ -46,7 +46,7 @@ func (c *Client) MuteTimings() ([]MuteTiming, error) {
 	return c.MuteTimingsContext(context.Background())
 }
 
-// MuteTimingsContext
+// MuteTimingsContext does the same thing as MuteTimings(), but also takes in a context.
 func (c *Client) MuteTimingsContext(ctx context.Context) ([]MuteTiming, error) {
 	mts := make([]MuteTiming, 0)
 	err := c.request(ctx, "GET", "/api/v1/provisioning/mute-timings", nil, nil, &mts)
@@ -61,7 +61,7 @@ func (c *Client) MuteTiming(name string) (MuteTiming, error) {
 	return c.MuteTimingContext(context.Background(), name)
 }
 
-// MuteTimingContext
+// MuteTimingContext does the same thing as MuteTiming(), but also takes in a context.
 func (c *Client) MuteTimingContext(ctx context.Context, name string) (MuteTiming, error) {
 	mt := MuteTiming{}
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", name)
@@ -74,7 +74,7 @@ func (c *Client) NewMuteTiming(mt *MuteTiming) error {
 	return c.NewMuteTimingContext(context.Background(), mt)
 }
 
-// NewMuteTimingContext
+// NewMuteTimingContext does the same thing as NewMuteTiming(), but also takes in a context.
 func (c *Client) NewMuteTimingContext(ctx context.Context, mt *MuteTiming) error {
 	req, err := json.Marshal(mt)
 	if err != nil {
@@ -89,7 +89,7 @@ func (c *Client) UpdateMuteTiming(mt *MuteTiming) error {
 	return c.UpdateMuteTimingContext(context.Background(), mt)
 }
 
-// UpdateMuteTimingContext
+// UpdateMuteTimingContext does the same thing as UpdateMuteTiming(), but also takes in a context.
 func (c *Client) UpdateMuteTimingContext(ctx context.Context, mt *MuteTiming) error {
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", mt.Name)
 	req, err := json.Marshal(mt)
@@ -105,7 +105,7 @@ func (c *Client) DeleteMuteTiming(name string) error {
 	return c.DeleteMuteTimingContext(context.Background(), name)
 }
 
-// DeleteMuteTimingContext
+// DeleteMuteTimingContext does the same thing as DeleteMuteTiming(), but also takes in a context.
 func (c *Client) DeleteMuteTimingContext(ctx context.Context, name string) error {
 	uri := fmt.Sprintf("/api/v1/provisioning/mute-timings/%s", name)
 	return c.request(ctx, "DELETE", uri, nil, nil, nil)
